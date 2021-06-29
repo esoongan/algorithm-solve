@@ -1,81 +1,73 @@
+from collections import Counter
+from itertools import combinations
 
-rotate_list = []
+temp = []
+# 전체사용자 - user_id, 불량사용자목록 - banned_id
+# 가능한 경우의수 (전체에서 해당되는 사용자들을 모두 찾고 조합갯수?)
+def solution(user_id, banned_id):
+    answer = 0
+    one_list = []
 
-def clock_rotation(key, depth):
+    # 예외처리 해주니까 테스트케이스 하나 시간초과나던거 해결했다.
+    if len(Counter(banned_id).keys())==1:
+        for j in user_id:
+            if match(j, banned_id[0]):
+                one_list.append(j)
 
-    if depth == 3:
+        return len(list(combinations(one_list,len(banned_id))))
+
+
+    ban_len = len(banned_id)
+    match_list = [[] for _ in range(ban_len)]
+
+    for idx, i in enumerate(banned_id):
+        for j in user_id:
+            if match(j, i):
+                match_list[idx].append(j)
+    # print(match_list)
+
+    for i in match_list[0]:
+        curr = []
+        dfs(i, 0, match_list[1:], curr)
+    result = set()
+
+    for i in temp:
+        i = set(i)
+        if len(i) != ban_len:
+            continue
+        result.add(tuple(sorted(i)))
+
+    return len(result)
+
+
+# ['frodo', 'crodo'], ['abc123', 'frodoc']]
+def dfs(start, depth, graph, curr):
+    curr.append(start)
+
+    if depth == len(graph):
+        temp.append(curr.copy()) ## 또오오오오오오오오
         return
 
-    m = len(key)
-
-    new_key = [[0] * m for _ in range(m)]
-
-    # 시계방향으로 회전
-    for i in range(m):
-        for j in range(m):
-            new_key[j][m-1-i] = key[i][j]
-
-    rotate_list.append(new_key)
-    return clock_rotation(new_key, depth+1)
+    for i in graph[depth]:
+        dfs(i, depth + 1, graph, curr)
+        curr.remove(i)
 
 
-def solution(key, lock):
+def match(target, banid):
 
-    # 회전한 키들을 담는 리스트 rotation_list
-    rotate_list.append(key)
-    clock_rotation(key, 0)
-
-    m = len(key)
-    n = len(lock)
-    new_n = (3*n)-2
-
-    # 크기를 키운 새로운 lock배열
-    new_lock = [[0] * new_n for _ in range(new_n)]
-
-    # new_lock의 중앙에 기존 lock배열을 위치시킨다.
-    for i in range(n):
-        for j in range(n):
-            new_lock[i+n-1][j+n-1] = lock[i][j]
-
-    # 회전한 키에 대해서
-    for round in rotate_list:
-        for i in range(new_n-m):
-            for j in range(new_n-m):
-                attach_key(i,j,m,round,new_lock)
-                if check(new_lock, n):
-                    return True
-                dettach_key(i,j,m,round,new_lock)
-    return False
-
-
-# 좌측상단 꼭지점이 x,y일때 키를 붙이는 함수
-def attach_key(x,y, m, key, new_lock):
-    for i in range(m):
-        for j in range(m):
-            new_lock[x+i][y+j] += key[i][j]
-
-def dettach_key(x,y,m,key,new_lock):
-    for i in range(m):
-        for j in range(m):
-            new_lock[x+i][y+j] -= key[i][j]
-
-# 자물쇠가 풀렸나?
-def check(new_lock, n):
-    middle = get_middle(new_lock, n)
-    print(middle)
-    for line in middle:
-        for i in line:
-            if i != 1: # 홈이 남아있다.
+    if len(target) != len(banid):
+        return False
+    for idx, i in enumerate(banid):
+        if i == '*':
+            continue
+        else:
+            if target[idx] != i:
                 return False
     return True
 
-def get_middle(new_lock, n):
-    middle = [[0]*n for _ in range(n)]
-    for i in range(n):
-        for j in range(n):
-            middle[i][j] = new_lock[i+n-1][j+n-1]
-    return middle
 
-key = [[0, 0, 0], [1, 0, 0], [0, 1, 1]]
-lock = [[1, 1, 1, 0], [1, 1, 0,0], [1, 0, 1,0],[1, 0, 1,0]]
-print(solution(key, lock))
+u = ["frodo", "fradi", "crodo", "abc123", "frodoc"]
+b = ["*****", "*****"]
+
+k = solution(u,b)
+print(k)
