@@ -1,30 +1,33 @@
-# 힙 자료구조를 사용한다.
-# 한번의 반복마다 
-# 1. 힙에서 차례로 2개씩 빼서 새로운 음식을 만들어 힙에 추가한다.
-# 2. 최소힙에서 값을하나 뺀것이 이미 스코빌지수를 넘었다면끝낸다.
-# 3. 힙에 남은 값이 1개인데, 이 1개가 스코빌지수보다 낮다면 -1을 리턴한다.
-import heapq
+answer = 0
 
+def solution(triangle):
+    global end
+    end = len(triangle)
+    start_node = triangle[0][0]
+    new_val = [[] for _ in range(end)]
+    # 최대합을 저장할 2차원 리스트
+    new_val[0].append(start_node)
 
+    for i in range(end):
+        for j in range(len(triangle[i])):
+            curr = triangle[i][j]
 
-def solution(s, K):
-    heapq.heapify(s)
+			# 맨 윗줄이면 그냥 넘어간다.
+            if i == 0:
+                continue
+            # 대각선 위로 2개가 존재하는 경우 둘중에 더 큰값을 더한다.
+            if j > 0 and j < len(triangle[i])-1:
+                val = max(new_val[i-1][j-1], new_val[i-1][j])
+                curr += val
+            # 오른쪽 위 대각선만 존재하는 경우
+            elif j == 0:
+                curr += new_val[i-1][j]
+            # 왼쪽 위 대각선만 존재하는 경우
+            elif j == len(triangle[i])-1:
+                curr += new_val[i-1][j-1]
 
-    depth = 0
-    while len(s) > 1:
-        depth +=1
-        a = heapq.heappop(s)
-        b = heapq.heappop(s)
+			# 구한 현재까지 최대합을 저장한다.
+            new_val[i].append(curr)
 
-        new = a + (b*2)
-        heapq.heappush(s, new)
-
-        min_value = s[0] #팝 하지 않고 가장 작은 항목에 액세스하려면, heap[0]을 사용하십시오.
-        if min_value > K:
-            return depth
-    return -1
-
-
-
-s = solution([1, 2, 3, 9, 10, 12], 7)
-print(s)
+	# 최종적으로 맨 마지막줄에서 최댓값이 구할수있는 최대합이다.
+    return max(new_val[-1])
