@@ -1,119 +1,67 @@
-def solution(n, build_frame):
+def solution(places):
     answer = []
+    graph = []
 
-    graph = [[[False, False] for _ in range(n+1)] for _ in range(n+1)]
-    print(graph[0][0])
+    for place in places:
+        p_list = []
+        temp = []
+        for line in place:
+            temp.append(list(line))
+        graph.append(temp)
 
-    for i in build_frame:
-        a,b,thing,do = i[0],i[1],i[2],i[3]
-        # 0- 삭제, 1- 설치
-        # 기둥일때
-        if thing == 0:
-            # 기둥 - 설치
-            if do == 1:
-                if check_gidung(a,b, graph):
-                    graph[a][b][0] = True
-                else:
-                    continue
-            # 기둥 - 삭제
-            elif do == 0:
-                if check_remove_gidung(a,b,graph):
-                    graph[a][b][0] = False
-                else:
-                    continue
-
-
-        # 보일때
-        elif thing == 1:
-            # 보 - 설치
-            if do == 1:
-                if check_bo(a,b, graph):
-                    graph[a][b][1] = True
-                else:
-                    continue
-            #보 - 삭제
-            elif do == 0:
-                if check_remove_bo(a,b,graph):
-                    graph[a][b][1] = False
-                else:
-                    continue
-
-    # print(graph[0])
-    # print(graph[1])
-    # print(graph[2])
-    # print(graph[3])
-    # print(graph[4])
-    # print(graph[5])
-
-
-    for i in range(n+1):
-        for j in range(n+1):
-            gidung, bo = graph[i][j][0], graph[i][j][1]
-            if gidung:
-                answer.append([i,j,0])
-            if bo:
-                answer.append([i,j,1])
-
-    print(answer)
+    for i in graph:
+        answer.append(check(i, []))
+    # [['P', 'O', 'O', 'O', 'P'], ['O', 'X', 'X', 'O', 'X'], ['O', 'P', 'X', 'P', 'X'], ['O', 'O', 'X', 'O', 'X'], ['P', 'O', 'X', 'X', 'P']]
     return answer
 
-# a,b위치에 기둥을 세울수 있는가?
-def check_gidung(a,b, graph):
-    if b == 0:
-        return True
-    # 좌표 (a-1,b)위치의 기둥(0)이 세워져있다면
-    elif graph[a][b-1][0] == True:
-        return True
-    elif graph[a-1][b][1] == True or graph[a][b][1] == True:
-        return True
-    else:
-        return False
 
-# a,b에 보를 세울수 있냐?
-def check_bo(a,b, graph):
-    # 밑에 기둥있는경우
-    if graph[a][b-1][0] == True or graph[a+1][b-1][0]:
-        return True
-    elif graph[a-1][b][1] == True or graph[a+1][b][1] == True:
-        return True
-    else:
-        return False
+def check(graph, p_list):
+    for i in range(5):
+        for j in range(5):
+            if graph[i][j] == 'P':
+                p_list.append((i, j))
 
-def check_remove_gidung(a,b,graph):
-    # 임의로 삭제를 해본다.
-    # 삭제한후에 영향을 받는 좌표들을 기점으로 설치가 가능한지 확인한다.
-    # 설치가 가능하다면 삭제가 가능하다.
+    #print(p_list)
+    while p_list:
+        curr = p_list.pop()
+        for i in p_list:
+            mht = manhatten(curr, i)
+            # 맨해튼거리가 2초과이면
+            if mht > 2:
+                continue
+            # 맨해튼거리가 2 이하이면
+            elif mht == 2:
+                x1, y1 = curr[0], curr[1]
+                x2, y2 = i[0], i[1]
+                # 같은 행에 위치한경우
+                if x1 == x2:
+                    if graph[x1][min(y1, y2) + 1] == 'O':
+                        return 0
+                        # 같은 열에 위치한경우
+                elif y1 == y2:
+                    if graph[min(x1, x2) + 1][y1] == 'O':
+                        return 0
+                # 대각선에 위치한경우
+                else:
+                    if graph[x1][y1] == 'O':
+                        return 0
+                    elif graph[x1][y2] == 'O':
+                        return 0
+                    elif graph[x2][y1] == 'O':
+                        return 0
+                    elif graph[x2][y2] == 'O':
+                        return 0
+            else:
+                return 0
+    return 1
 
-    temp = graph.copy()
-    temp[a][b][0] = False
-    temp[a-1][b+1][1] = False
-    temp[a][b+1][1] = False
-    temp[a][b+1][0] = False
 
-    # 영향받는 좌표 - 보(a-1, b+1), 보(a, b+1), 기둥(a,b+1)
-    if check_bo(a-1, b+1, temp):
-        if check_bo(a, b+1, temp):
-            if check_gidung(a, b+1, temp):
-                return True
-    return False
+def manhatten(a, b):
+    return abs(a[0] - b[0]) + abs(a[1] - b[1])
 
-
-def check_remove_bo(a,b, graph):
-    # 임의로 삭제를 해본다.
-    # 삭제한후에 영향을 받는 좌표들을 기점으로 설치가 가능한지 확인한다.
-    # 설치가 가능하다면 삭제가 가능하다.
-
-    temp = graph.copy()
-    temp[a-1][b][1] = False
-    temp[a+1][b][1] = False
-    temp[a][b][0]= False
-    temp[a+1][b][0] = False
-
-    # 영향받는 좌표 - 보(a-1, b) (a+1, b), 기둥 (a,b), (a+1, b)
-
-    if check_bo(a-1, b, temp):
-        if check_bo(a+1, b, temp):
-            if check_gidung(a, b, temp):
-                if check_gidung(a+1,b,temp):
-                    return True
-    return False
+# 모든 응시자의 위치를 구한다.(a,b)
+# 특정 응시자와 나머지 모든 응시자를 비교한다.
+# 맨해튼거리가 2초과이면 다음 응시자와 비교한다.
+# 맨해튼거리가 2이하이면 조건을 나누어 검색한다.
+# 거리가 2라면 두 사람을 꼭지점으로 하는 사각형내의 모든 지점에서 O가 하나라도 있다면 지키지 않은것
+# 나머지 모든사람과 검사했는데 ㄱㅊ으면 다음사람으로 넘어간다.
