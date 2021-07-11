@@ -1,67 +1,146 @@
-def solution(places):
-    answer = []
-    graph = []
+# LinkedList 구현 210711
 
-    for place in places:
-        p_list = []
-        temp = []
-        for line in place:
-            temp.append(list(line))
-        graph.append(temp)
-
-    for i in graph:
-        answer.append(check(i, []))
-    # [['P', 'O', 'O', 'O', 'P'], ['O', 'X', 'X', 'O', 'X'], ['O', 'P', 'X', 'P', 'X'], ['O', 'O', 'X', 'O', 'X'], ['P', 'O', 'X', 'X', 'P']]
-    return answer
+class Node(object):
+    def __init__(self, data, next=None):
+        self.data = data
+        self.next = next
 
 
-def check(graph, p_list):
-    for i in range(5):
-        for j in range(5):
-            if graph[i][j] == 'P':
-                p_list.append((i, j))
+class SingleList(object):
+    def __init__(self):
+        self.head = Node(None)
+        self.size = 0
 
-    #print(p_list)
-    while p_list:
-        curr = p_list.pop()
-        for i in p_list:
-            mht = manhatten(curr, i)
-            # 맨해튼거리가 2초과이면
-            if mht > 2:
-                continue
-            # 맨해튼거리가 2 이하이면
-            elif mht == 2:
-                x1, y1 = curr[0], curr[1]
-                x2, y2 = i[0], i[1]
-                # 같은 행에 위치한경우
-                if x1 == x2:
-                    if graph[x1][min(y1, y2) + 1] == 'O':
-                        return 0
-                        # 같은 열에 위치한경우
-                elif y1 == y2:
-                    if graph[min(x1, x2) + 1][y1] == 'O':
-                        return 0
-                # 대각선에 위치한경우
-                else:
-                    if graph[x1][y1] == 'O':
-                        return 0
-                    elif graph[x1][y2] == 'O':
-                        return 0
-                    elif graph[x2][y1] == 'O':
-                        return 0
-                    elif graph[x2][y2] == 'O':
-                        return 0
+    def listSize(self):
+        return self.size
+
+    def is_empty(self):
+        if self.size != 0:
+            return False
+        else:
+            return True
+
+    def selectNode(self, idx):
+        if idx >= self.size:
+            print("Index Error")
+            return None
+        if idx == 0:
+            return self.head
+        else:
+            target = self.head
+            for cnt in range(idx):
+                target = target.next
+            return target
+
+    # 맨 왼쪽에 추가 head를 변경
+    def appendLeft(self, value):
+        # 연결리스트의 원소가 하나도없는경우 헤드만 추가되는 노드를 가리키도록
+        if self.is_empty():
+            self.head = Node(value)
+        else:
+            # 헤드가 가리키던 화살표를 추가되는 노드가 가지는 화살표로 바꿔준다.
+            self.head = Node(value, self.head)
+        self.size += 1
+
+    # 맨 오른쪽에 추가
+    def append(self, value):
+        if self.is_empty():
+            self.head = Node(value)
+            self.size += 1
+        else:
+            # 현재의 헤드다음 노드 -> 맨마지막 노드를 향해 간다.
+            target = self.head
+            while target.next != None:
+                target = target.next
+            # 맨 마지막에 추가될 노드이므로 두번째인자는 주지않는다. -> None으로 초기화
+            newTail = Node(value)
+            target.next = newTail
+            self.size += 1
+
+    #idx에 새로운노드 추가 ->
+    # idx이전노드의 next가 가리키던 값을 자신의 next로
+    # idx이전노드의 next는 자신으로
+    def insert(self, value, idx):
+        if self.is_empty():
+            self.head = Node(value)
+            self.size += 1
+        else:
+            target = self.selectNode(idx-1)
+            newNode = Node(value)
+            newNode.next = target.next
+            target.next = newNode
+            self.size += 1
+
+    def delete(self, idx):
+        if self.is_empty():
+            print("삭제할 노드가 없다.")
+            return
+        elif idx>= self.size:
+            print("인덱스에러")
+            return
+        elif idx == 0:
+            target = self.head
+            self.head = target.next
+            del(target)
+            self.size -=1
+        else:
+            target = self.selectNode(idx-1)
+            deltarget = target.next
+            target.next = deltarget.next
+            del(deltarget)
+            self.size -=1
+
+    def printlist(self):
+        target = self.head
+        while target:
+            if target.next != None:
+                print(target.data, '->', end=" ")
+                target = target.next
             else:
-                return 0
-    return 1
+                print(target.data)
+                target = target.next # None
 
 
-def manhatten(a, b):
-    return abs(a[0] - b[0]) + abs(a[1] - b[1])
+mylist = SingleList()
+mylist.append('A')
+mylist.printlist()
+mylist.append('B')
+mylist.printlist()
+mylist.append('C')
+mylist.printlist()
+mylist.insert('D', 1)
+mylist.printlist()
+mylist.appendLeft('E')
+mylist.printlist()
+print(mylist.listSize())
+mylist.delete(0)
+mylist.printlist()
+mylist.delete(3)
+mylist.printlist()
+mylist.delete(0)
+mylist.printlist()
+mylist.appendLeft('A')
+mylist.printlist()
 
-# 모든 응시자의 위치를 구한다.(a,b)
-# 특정 응시자와 나머지 모든 응시자를 비교한다.
-# 맨해튼거리가 2초과이면 다음 응시자와 비교한다.
-# 맨해튼거리가 2이하이면 조건을 나누어 검색한다.
-# 거리가 2라면 두 사람을 꼭지점으로 하는 사각형내의 모든 지점에서 O가 하나라도 있다면 지키지 않은것
-# 나머지 모든사람과 검사했는데 ㄱㅊ으면 다음사람으로 넘어간다.
+# A
+# A -> B
+# A -> B -> C
+# A -> D -> B -> C
+# E -> A -> D -> B -> C
+# 5
+# A -> D -> B -> C
+# A -> D -> B
+# D -> B
+# A -> D -> B
+
+
+
+
+
+
+
+
+
+
+
+
